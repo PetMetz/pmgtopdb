@@ -9,6 +9,39 @@ import os
 import numpy as np
 from pymatgen import Structure, Lattice, PeriodicSite, Composition, DummySpecie, Element
 
+
+def fold(structure, supercell):
+    """
+    return folded single unit cell
+    
+    Args:
+      * structure (pymatgen.Structure) : pymatgen structure instance. Expects supercell dimensions are integer multiples of some flavor.
+      * supercell (list, np.array) : (m, n, o ) [integers] or matrix with shape (3,3)
+    
+    Essentially:
+       A = inv(supercell) (3,3)
+       lattice = A * superlattice  (3,3)
+       B = inv(lattice)
+       coords = (B dot coord ) % 1 for coord in superstructure
+    
+    Returns:
+      pymatgen.Structure instance with each site folded into (1,1,1) lattice ( 0 < frac_coord < 1 )
+    """
+    if len(supercell) == 3:
+        supercell = np.identity(3) * np.array(supercell, dtype=float)
+    elif np.array(supercell).shape == (3,3):
+        supercell = np.array(supercell, dtype=float)
+    else:
+        raise(Exception('supercell must be (m, n, o) or (3x3) matrix'))
+    
+    transform = np.linalg.inv(supercell)
+    lat = Lattice(transform * structure.lattice.matrix)
+    invlat = np.linalg.inv(lat.matrix)
+    coords = [np.dot(invlat, coord) % 1 for coord in structure.cart_coords]
+    comp = structure.species_and_occu
+    return Structure(lat, comp, coords)
+
+
 class PMG():
     """ """
 
