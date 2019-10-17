@@ -1,0 +1,8 @@
+setup.py
+pmgtopdb/__init__.py
+pmgtopdb/pdb_to_pmg.py
+pmgtopdb/pmg_to_pdb.py
+pmgtopdb.egg-info/PKG-INFO
+pmgtopdb.egg-info/SOURCES.txt
+pmgtopdb.egg-info/dependency_links.txt
+pmgtopdb.egg-info/top_level.txt
