@@ -46,15 +46,24 @@ class Discretizomator(object):
 
             elif v >= 1.: # single occupancy
                 p = v / v
+            else:
+                print('last site:')
+                print(site)
+                raise(Exception('something went wrong... couldn\'t probabilize'))
 
         elif len(k) > 1:  # multiple atom types
-            if v.sum() < 1.: # partial vacancy
+            if np.round(v.sum(), 5) < 1.: # partial vacancy
                 v = np.squeeze((v, 1.-v.sum()))
                 p = v / v.sum()
                 k.append(DummySpecie(''))  # Vacancy(self.structure, site))
 
-            elif v.sum() >= 1.: # fully site mixed
+            elif np.round(v.sum(), 5) >= 1.: # fully site mixed
                 p = v / v.sum()
+                
+            else:
+                print('last site:')
+                print(site)
+                raise(Exception('something went wrong... couldn\'t probabilize'))
 
         return dict(zip(k, p))
 
@@ -68,22 +77,19 @@ class Discretizomator(object):
         Returns:
             pymatgen.Structure (new instance)
         """
-        count = 0
-        while structure.composition.num_atoms != structure.num_sites:
-            for site in structure:
-                rd = self.probabilize(site)
-                k = np.random.choice(list(rd.keys()), p=list(rd.values()))
-                if type(k) is DummySpecie:
-                    # print ('removing %s' % site.__str__())
-                    structure.remove(site)
-                elif type(k) is Element:
-                    site.species = Composition({k: 1.0})
-                    # print (site.__str__())
-                else:
-                    raise(Exception('Need Element or DummySpecie as key to manipulate site Composition'))
-            count += 1
-            if count >= 100:
-                raise(Exception("Unable to strip vacanct sites... I don\'t have an explaination for this."))
+
+        for site in structure:
+            rd = self.probabilize(site)
+            k = np.random.choice(list(rd.keys()), p=list(rd.values()))
+            if type(k) is DummySpecie:
+                # print ('removing %s' % site.__str__())
+                structure.remove(site)
+            elif type(k) is Element:
+                site.species = Composition({k: 1.0})
+                # print (site.__str__())
+            else:
+                raise(Exception('Need Element or DummySpecie as key to manipulate site Composition'))
+
         return Structure(structure.lattice, structure.species_and_occu, structure.frac_coords ) # return new instance
 
 
